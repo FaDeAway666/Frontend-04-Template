@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tictactoe</title>
+</head>
+<style>
+  .cell {
+    width: 50px;
+    height: 50px;
+    background-color: green;
+    border: 1px solid white;
+    color: red;
+    line-height: 50px;
+    font-size: 20px;
+    text-align: center;
+    vertical-align: middle;
+    display: inline-block;
+  }
+</style>
+<body>
+  <div id="container">
+  </div>
+</body>
+
+<script>
+  let patten = [
+    [0,0,2],
+    [0,1,0],
+    [0,0,0]
+  ]
+
+  let flag = 1;
+  let res = null;
+  function move(i,j) {
+    if(!patten[i][j]) {
+      patten[i][j] = flag;
+      drawChess(patten);
+      if(check(patten, flag) && !res){
+        alert(flag == 1 ? '圈赢了' : '叉赢了')
+        res = true;
+      }
+      flag = 3 - flag;
+      computerMove(patten);
+      if(willWin(patten, flag) && !res)
+        console.log(flag == 1 ? '圈要赢了' : '叉要赢了')
+      // if(!check(patten))
+      //   willWin();
+    }
+  }
+
+  function computerMove() {
+    let point = bestChoice(patten, flag).point;
+    console.log(point, 'bestchoice')
+    if(point) {
+      patten[point[1]][point[0]] = flag;
+    }
+    if(check(patten, flag) && !res){
+      alert(flag == 1 ? '圈赢了' : '叉赢了')
+      res = true;
+    }
+    flag = 3 - flag;
+    drawChess(patten);
+  }
+
+  function check(patten, flag) {
+    for(let i=0;i<3;i++) {
+      let win = true;
+      for(let j=0;j<3;j++){
+        if(patten[i][j] != flag) // flag指的是当前落子的颜色，如果这一排有何当前落子不相同的颜色，那么没有获胜
+          win = false;
+      }
+      if(win)
+        return true;
+    }
+    for(let i=0;i<3;i++) {
+      let win = true;
+      for(let j=0;j<3;j++){
+        if(patten[j][i] != flag)
+          win = false;
+      }
+      if(win)
+        return true;
+    }
+    {
+      let win = true;
+      for(let j=0;j<3;j++){
+        if(patten[j][2-j] != flag)
+          win = false
+      }
+      if(win)
+        return true
+    }
+    {
+      let win = true;
+      for(let j=0;j<3;j++){
+        if(patten[j][j] != flag)
+          win = false
+      }
+      if(win)
+        return true
+    }
+    return false;
+  }
+
+function willWin (pattern, flag) {
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (pattern[i][j] !== 0) 
+        continue
+      let tmp = JSON.parse(JSON.stringify(pattern))
+      tmp[i][j] = flag
+      if (check(tmp, flag)) {
+        return [j, i]
+      }
+    }
+  }
+  return null
+}
+
+function bestChoice (pattern, flag) {
+  let point = willWin(pattern, flag)
+  if (point) {
+    return {
+      point: point, // 位置
+      result: 1 // 代表要赢还是输 赢 1 输 -1 和 0
+    }
+  }
+  let result = -2
+  outer: for(let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j ++) {
+      if (pattern[i][j] !== 0) continue
+      let tmp = JSON.parse(JSON.stringify(pattern))
+      tmp[i][j] = flag
+      let opp = bestChoice(tmp, 3 - flag) 
+      if (-opp.result >= result) { // 保证不输
+        point = [j, i]
+        result = -opp.result
+      }
+      if (result == 1) {// 胜负剪支
+        break outer
+      }
+    }
+  }
+  return {
+    point: point,
+    result: point ? result : 0
+  }
+}
+
+  function drawChess(patten) {
+    // if(res) return;
+    let container = document.getElementById('container');
+    container.innerHTML = '';
+    for(let i=0;i<3;i++) {
+      for(let j=0;j<3;j++) {
+        let cell = document.createElement('div')
+        cell.classList.add('cell');
+        cell.addEventListener('click', () => move(i, j));
+        cell.innerText = patten[i][j] == 1 ? '圈' : patten[i][j] == 2 ? '叉' : ''
+        container.appendChild(cell)
+      }
+      container.appendChild(document.createElement('br'))
+    }
+  }
+
+
+  drawChess(patten);
+  console.log(bestChoice(patten, flag));
+</script>
+</html>
