@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    div {
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+        background-color: gray;
+        border-radius: 50%;
+        margin: 50px;
+    }
+    .green.light {
+        background-color: green;
+    }
+    .yellow.light {
+        background-color: yellow;
+    }
+    .red.light {
+        background-color: red;
+    }
+</style>
+<body>
+    <div class="green light"></div>
+    <div class="yellow"></div>
+    <div class="red"></div>
+</body>
+
+<script>
+    function green() {
+        var divs = document.getElementsByTagName('div');
+        for(var i=0;i<divs.length;i++) {
+            divs[i].classList.remove('light')
+        }
+        document.getElementsByClassName('green')[0].classList.add('light')
+    }
+    function yellow() {
+        var divs = document.getElementsByTagName('div');
+        for(var i=0;i<divs.length;i++) {
+            divs[i].classList.remove('light')
+        }
+        document.getElementsByClassName('yellow')[0].classList.add('light')
+    }
+    function red() {
+        var divs = document.getElementsByTagName('div');
+        for(var i=0;i<divs.length;i++) {
+            divs[i].classList.remove('light')
+        }
+        document.getElementsByClassName('red')[0].classList.add('light')
+    }
+    
+    // callback
+    function go() {
+        green();
+        setTimeout(() => {
+            yellow();
+            setTimeout(() => {
+                red()
+                setTimeout(() => {
+                    go()
+                }, 500);
+            }, 200);
+        }, 1000);
+    }
+
+    function sleep(t) {
+        return new Promise((res,rej) => {
+            setTimeout(() => {
+                res()
+            }, t);
+        }) 
+    }
+    // promise
+    function go2() {
+        green();
+        sleep(1000).then(() => {
+            yellow();
+            return sleep(200)
+        }).then(() => {
+            red();
+            return sleep(500)
+        }).then(() => {
+            go2()
+        })
+    }
+    // async await
+    async function go3() {
+        green();
+        await sleep(1000);
+        yellow();
+        await sleep(200);
+        red();
+        await sleep(500);
+        go3();
+    }
+    go3()
+</script>
+</html>
