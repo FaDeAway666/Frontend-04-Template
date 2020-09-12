@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+</body>
+
+<script>
+  let $ = Symbol('$');
+
+  // 字典树
+  class Trie {
+    constructor() {
+      this.root = Object.create(null);
+    }
+    insert(word) {
+      let node = this.root;
+      for(let w of word) {
+        if(!node[w]) {
+          node[w] = Object.create(null)
+        }
+        node = node[w]
+      }
+      if(!($ in node))
+        node[$] = 0;
+      
+      node[$]++;
+    }
+    most() {
+      let max = 0;
+      let maxWord = null;
+      let visit = (node, word) => {
+        if(node[$] && node[$] > max) {
+          max = node[$];
+          maxWord = word;
+        }
+        for(let p in node) {
+          visit(node[p], word + p)
+        }
+      }
+      visit(this.root, "");
+      console.log(maxWord, max)
+    }
+  }
+
+  function randomWord(length) {
+    var s = "";
+    for(let i=0; i<length; i++) {
+      s += String.fromCharCode(Math.random() * 26 + "a".charCodeAt(0));
+    }
+    return s;
+  }
+
+  let trie = new Trie()
+  for(let i=0; i<100000; i++) {
+    trie.insert(randomWord(4));
+  }
+
+  // trie.most()
+
+  // a b c a b c e
+  // 0 0 0 0 1 2 3
+
+  // a b a b a b c
+  // 0 0 0 1 2 3 4
+
+  // a a b a a a c
+  // 0 0 1 0 1 2 
+
+  /** kmp */
+  // 如果pattern中自己没有重复的序列，那么一定是pattern重头开始比较
+  // 如果pattern中有自己重复的序列，那么会利用到pattern自身重复的那段序列
+  // pattern匹配下标将从source与pattern不一致的位置开始向前移动与pattern 自身重复序列长度相同的位数
+  // 若该位置还不相等，则继续前向移动相同位数，直到pattern重头开始匹配
+  function kmp(source, pattern) {
+    // table 用来表示当pattern下标到此之时，前面有几个字符是重复的
+    let table = new Array(pattern.length).fill(0);
+
+    {
+      let i=1,j=0;
+      while(i < pattern.length) {
+        if(pattern[i] == pattern[j]) {
+          ++i;++j;
+          if (i >= pattern.length)
+            break;
+          table[i] = j;
+        } else {
+          if(j > 0)
+            j = table[j];
+          else
+            ++i;
+        }
+      }
+
+    }
+    console.log(table)
+    {
+      let i=0,j=0;
+      while(i < source.length) {
+        if(source[i] == pattern[j]) {
+          ++i;++j;
+        } else {
+          if(j > 0) {
+            console.log(j,'before')
+            j = table[j]
+            console.log(j)
+          }
+          else
+            ++i;
+        }
+        if(j == pattern.length)
+          return true
+      }
+      return false
+    }
+
+  }
+
+  console.log(kmp('aabaabaaac','aabaaac'));
+</script>
+</html>

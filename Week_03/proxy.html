@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proxy</title>
+</head>
+<body>
+  <input id="r" type="range" min=0 max=255>
+  <input id="g" type="range" min=0 max=255>
+  <input id="b" type="range" min=0 max=255>
+  <div id="color" style="width:100px;height:100px"></div>
+</body>
+<script>
+  let obj = {
+    r: 1,
+    g: 2,
+    b: 3,
+    x: { y: 1 }
+  }
+
+  let callbacks = new Map(); 
+
+  let reactivities = new Map();
+
+  let useReactivity = []; // 存放需要使用代理的对象和属性
+
+  function reactivity(obj) {
+    if(reactivities.has(obj))
+      return reactivities.get(obj);
+
+    let proxy = new Proxy(obj, {
+      set(object, prop, value) {
+        object[prop] = value;
+        if(callbacks.has(object)) 
+          if(callbacks.get(object).has(prop))
+            callbacks.get(object).get(prop).forEach(callback => {
+              callback();
+            })
+        return object[prop]
+      },
+      get(object, prop) {
+        useReactivity.push([object, prop]); // 当拦截get的时候，能够获取到正在操作的属性
+        if(typeof object[prop] == 'object')
+          return reactivity(object[prop])
+        return object[prop];
+      }
+    }) 
+
+    reactivities.set(obj, proxy);
+    return proxy
+  }
+
+  function effect(callback) {
+    useReactivity = [] // 清空useReactivity,保证每次effect调用不带之前注册的监听
+    callback();
+
+    for(let react of useReactivity) {
+      if(!callbacks.has(react[0])) {
+        callbacks.set(react[0], new Map()); // 第一层 存放obj 和 prop的map
+      }
+      if(!callbacks.get(react[0]).has(react[1])) {
+        callbacks.get(react[0]).set(react[1], []) // prop的map 存放prop和callback
+      }
+      callbacks.get(react[0]).get(react[1]).push(callback);
+    }
+
+  }
+
+  let po = reactivity(obj);
+
+  // 监听obj属性改变
+  effect(() => {
+    // console.log(po.x.y); 
+    document.getElementById('r').value = po.r
+    document.getElementById('g').value = po.g
+    document.getElementById('b').value = po.b
+    document.getElementById('color').style.background = `rgb(${po.r},${po.g},${po.b})`;
+  })
+
+  document.getElementById('r').addEventListener('input', event => {
+    po.r = event.target.value
+  })
+  document.getElementById('g').addEventListener('input', event => {
+    po.g = event.target.value
+  })
+  document.getElementById('b').addEventListener('input', event => {
+    po.b = event.target.value
+  })
+</script>
+</html>
